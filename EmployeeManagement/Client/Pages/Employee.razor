@@ -1,0 +1,126 @@
+﻿@page "/employee"
+@page "/employee/{id:int}"
+@inject IEmployeeService EmployeeService
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
+
+@if (Id is null)
+{
+	<PageTitle>Create a new Employee</PageTitle>
+	<h3>Create a new Employee</h3>
+}
+else
+{
+	<PageTitle>Edit @employee.FirstName @employee.LastName</PageTitle>
+	<h3>Edit @employee.FirstName @employee.LastName</h3>
+}
+
+<EditForm Model="employee" OnSubmit="SubmitEmployee">
+	<DataAnnotationsValidator></DataAnnotationsValidator>
+	<ValidationSummary></ValidationSummary>
+	<div class="my-3">
+		<label for="First Name" class="form-label">First Name</label>
+		<InputText id="firstname" @bind-Value="employee.FirstName" class="form-control"></InputText>
+		<ValidationMessage For="@(() => employee.FirstName)"></ValidationMessage>
+	</div>
+	<div class="my-3">
+		<label for="Last Name" class="form-label">Last Name</label>
+		<InputText id="lastname" @bind-Value="employee.LastName" class="form-control"></InputText>
+		<ValidationMessage For="@(() => employee.LastName)"></ValidationMessage>
+
+	</div>
+	<div class="my-3">
+		<label for="email" class="form-label">Email</label>
+		<InputText id="email" @bind-Value="employee.Email" class="form-control"></InputText>
+		<ValidationMessage For="@(() => employee.Email)"></ValidationMessage>
+
+	</div>
+	<div class="my-3">
+		<label for="Date of Birth" class="form-label">Date of Birth</label>
+		<InputDate id="dob" @bind-Value="employee.DateOfBirth" class="form-control"></InputDate>
+		<ValidationMessage For="@(() => employee.DateOfBirth)"></ValidationMessage>
+
+	</div>
+	<div class="my-3">
+		<label for="Department" class="form-label">Department</label>
+		<InputSelect id="department" @bind-Value="employee.DepartmentId" class="form-control form-select">
+			@foreach (var department in EmployeeService.Departments)
+			{
+				<option value="@department.DepartmentId">@department.DepartmentName</option>
+			}
+		</InputSelect>
+		<ValidationMessage For="@(() => employee.DepartmentId)"></ValidationMessage>
+
+	</div>
+
+	<button type="submit" class="btn btn-primary my-3">@buttonText</button>
+	@if (Id != null)
+	{
+		<button type="button" class="btn btn-danger my-3 mx-3" @onclick="DeleteEmployee">Delete</button>
+	}
+	else
+	{
+		<button type="button" class="btn btn-danger my-3 mx-3" @onclick="BackToHome">Back</button>
+	}
+
+</EditForm>
+
+
+@code {
+	[Parameter]
+	public int? Id { get; set; }
+
+	public string? buttonText = string.Empty;
+
+	EmployeeManagement.Shared.Employee employee = new EmployeeManagement.Shared.Employee { Department = new Department() };
+
+	protected override async Task OnInitializedAsync()
+	{
+		buttonText = Id is null ? "Save" : "Update";
+		await EmployeeService.GetDepartments();
+	}
+
+
+	protected override async Task OnParametersSetAsync()
+	{
+		if (Id is null)
+		{
+			employee.Department = EmployeeService.Departments[0];
+			employee.DepartmentId = employee.Department.DepartmentId;
+		}
+		else
+		{
+			employee = await EmployeeService.GetEmployeeById((int)Id);
+		}
+	}
+
+	async Task SubmitEmployee()
+	{
+		if (Id is null)
+		{
+			if (employee == null || employee.FirstName == null|| employee.LastName == null|| employee.Email == null)
+			{
+				await JsRuntime.InvokeVoidAsync("alert", "Please fill the form!"); // Alert
+			}
+			else
+			{
+				await EmployeeService.CreateEmployee(employee);
+
+			}
+		}
+		else
+		{
+			await EmployeeService.UpdateEmployee(employee);
+		}
+	}
+
+	async Task DeleteEmployee()
+	{
+		await EmployeeService.DeleteEmployee(employee.EmployeeId);
+	}
+	void BackToHome()
+	{
+		NavigationManager.NavigateTo("/");
+	}
+
+}

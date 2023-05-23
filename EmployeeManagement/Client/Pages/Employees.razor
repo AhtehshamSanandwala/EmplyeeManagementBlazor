@@ -1,0 +1,75 @@
+﻿@page "/"
+@inject IEmployeeService EmployeeService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<PageTitle>Employee</PageTitle>
+<div class="row my-3">
+	<div class="col-6"><h3>Employees</h3></div>
+	<div class="col text-end">
+		<EditForm Model="searchText" OnSubmit="SearchEmployee">
+			<div>
+				<InputText id="search" class="form-control" placeholder="Search" @bind-Value="searchText" minlenght="2"></InputText>
+				<button type="submit" class="btn btn-primary my-3">Search</button>
+			</div>
+		</EditForm>
+	</div>
+</div>
+
+<table class="table table-striped table-hover table-bordered">
+	<thead>
+		<tr>
+			<th>First Name</th>
+			<th>Last Name</th>
+			<th>Email</th>
+			<th>Date of Birth</th>
+			<th>Department</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var employee in EmployeeService.Employees)
+		{
+			<tr>
+				<td>@employee.FirstName</td>
+				<td>@employee.LastName</td>
+				<td>@employee.Email</td>
+				<td>@employee.DateOfBirth.ToString("dd/MM/yyyy")</td>
+				<td>@employee.Department!.DepartmentName</td>
+				<td>
+					<button class="btn btn-primary" @onclick="(() => NavigateToEmployee(employee.EmployeeId))"><i class="oi oi-pencil"></i></button>
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>
+<button class="btn btn-primary" @onclick="NavigateToCreateEmployee">Create a New Employee</button>
+
+@code {
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		await EmployeeService.GetEmployees();
+	}
+	void NavigateToEmployee(int id)
+	{
+		NavigationManager.NavigateTo($"employee/{id}");
+	}
+	void NavigateToCreateEmployee()
+	{
+		NavigationManager.NavigateTo($"employee/");
+	}
+	public string searchText = string.Empty;
+	async Task SearchEmployee()
+	{
+		if (searchText.Length > 1)
+		{
+			await EmployeeService.SearchEmployee(searchText);
+		}
+		else
+		{
+			await JsRuntime.InvokeVoidAsync("alert", "Please enter more than on character!"); // Alert
+		}
+	}
+}
