@@ -57,7 +57,7 @@ namespace EmployeeManagement.Client.Services.EmployeeService
 		public async Task DeleteEmployee(int id)
 		{
 			var request = await _httpClient.DeleteAsync($"api/employee/{id}");
-			NavitgateToEmployees();
+			_navigationManager.NavigateTo(_navigationManager.Uri, true);
 		}
 
 		public async Task UpdateEmployee(EmployeeManagement.Shared.Employee employee)

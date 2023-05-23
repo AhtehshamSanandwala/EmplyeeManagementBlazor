@@ -117,6 +117,7 @@ else
 	async Task DeleteEmployee()
 	{
 		await EmployeeService.DeleteEmployee(employee.EmployeeId);
+		NavigationManager.NavigateTo(NavigationManager.Uri, true);
 	}
 	void BackToHome()
 	{
